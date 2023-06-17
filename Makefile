@@ -6,8 +6,8 @@ createdb:
 
 dropdb:
 	docker exec -it postgres dropdb simple_bank
-	
-db restart:
+
+dbrestart:
 	docker container restart postgres
 
 migrateup:
@@ -21,4 +21,5 @@ sqlc:
 
 test:
 	go test -v -cover ./...
+
 .PHONY: postgres createdb dropdb migrateup migratedown
