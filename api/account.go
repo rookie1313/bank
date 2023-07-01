@@ -3,8 +3,9 @@ package api
 import (
 	db "bank/db/sqlc"
 	"database/sql"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type createAccountRequest struct {
@@ -48,6 +49,30 @@ func (server *Server) getAccount(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, errResponse(err))
 			return
 		}
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, account)
+}
+
+type listAccountRequest struct {
+	PageID   int32 `form:"page_id" binding:"required,min=1"`          //validate
+	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"` //validate
+}
+
+func (server *Server) listAccount(ctx *gin.Context) {
+	var req listAccountRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	arg := db.ListAccountsParams{
+		Limit:  req.PageSize,
+		Offset: (req.PageID - 1) * req.PageSize,
+	}
+	account, err := server.store.ListAccounts(ctx, arg)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}

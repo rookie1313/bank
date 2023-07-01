@@ -4,8 +4,9 @@ import (
 	"bank/api"
 	db "bank/db/sqlc"
 	"database/sql"
-	_ "github.com/lib/pq"
 	"log"
+
+	_ "github.com/lib/pq"
 )
 
 const (
