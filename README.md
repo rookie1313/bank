@@ -6,8 +6,8 @@ Postgresql alpine 15<br>
 Docker
 
 packages:<br>
-gin
-sqlc
-testify
-viper
-gRPC(client:evans)
+gin<br>
+sqlc<br>
+testify<br>
+viper<br>
+gRPC(client:evans gateway:grpc-gateway)
