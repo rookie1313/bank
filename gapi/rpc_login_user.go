@@ -6,6 +6,7 @@ import (
 	"bank/util"
 	"context"
 	"database/sql"
+	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -14,7 +15,7 @@ import (
 func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
 	user, err := server.store.GetUser(ctx, req.GetUsername())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Errorf(codes.NotFound, "user not found %s ", err.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get user %s ", err.Error())
@@ -35,12 +36,13 @@ func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (
 		return nil, status.Errorf(codes.Internal, "failed to create refresh token %s ", err.Error())
 	}
 
+	metaData := server.extractMetaData(ctx)
 	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
 		ID:           refreshPayload.ID,
 		Username:     user.Username,
 		RefreshToken: refreshToken,
-		UserAgent:    "",
-		ClientIp:     "",
+		UserAgent:    metaData.UserAgent,
+		ClientIp:     metaData.ClientIp,
 		IsBlocked:    false,
 		ExpiredAt:    refreshPayload.ExpiredAt,
 	})
