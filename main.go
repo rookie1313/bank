@@ -3,12 +3,15 @@ package main
 import (
 	"bank/api"
 	db "bank/db/sqlc"
+	_ "bank/doc/statik"
 	"bank/gapi"
 	"bank/pb"
 	"bank/util"
 	"context"
 	"database/sql"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/rakyll/statik/fs"
+	"github.com/skratchdot/open-golang/open"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -95,6 +98,21 @@ func runGatewayServer(config util.Config, store db.Store) {
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
+	//swagger
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal("can not create statik fs: ", err)
+	}
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
+	mux.Handle("/swagger/", swaggerHandler)
+	//open swagger when start
+	go func() {
+		addr := "http://localhost:8080/swagger"
+		err := open.Run(addr)
+		if err != nil {
+			log.Fatal("can not open swagger api page ", err)
+		}
+	}()
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
 		log.Fatal("can not create listener ", err)

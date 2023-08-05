@@ -23,6 +23,7 @@
   "paths": {
     "/v1/create_user": {
       "post": {
+        "description": "create a new user",
         "operationId": "Bank_CreateUser",
         "responses": {
           "200": {
@@ -55,6 +56,7 @@
     },
     "/v1/login_user": {
       "post": {
+        "description": "login user",
         "operationId": "Bank_LoginUser",
         "responses": {
           "200": {
