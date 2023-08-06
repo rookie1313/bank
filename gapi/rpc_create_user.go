@@ -4,13 +4,21 @@ import (
 	db "bank/db/sqlc"
 	"bank/pb"
 	"bank/util"
+	"bank/val"
 	"context"
+	"errors"
 	"github.com/lib/pq"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+	violations := validateCreateUserRequest(req)
+	if violations != nil {
+		return nil, invalidArgumentError(violations)
+	}
+
 	hashedPassword, err := util.HashPassword(req.GetPassword())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to hash password %s ", err.Error())
@@ -24,7 +32,8 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	}
 	user, err := server.store.CreateUser(ctx, args)
 	if err != nil {
-		if pgErr, ok := err.(*pq.Error); ok {
+		var pgErr *pq.Error
+		if errors.As(err, &pgErr) {
 			switch pgErr.Code.Name() {
 			case "unique_violation":
 				return nil, status.Errorf(codes.AlreadyExists, "username already exists %s ", err.Error())
@@ -37,4 +46,25 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	}
 
 	return res, nil
+}
+
+func validateCreateUserRequest(req *pb.CreateUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+	err := val.ValidateUsername(req.GetUsername())
+	if err != nil {
+		violations = append(violations, fieldViolation("username", err))
+	}
+	err = val.ValidatePassword(req.GetPassword())
+	if err != nil {
+		violations = append(violations, fieldViolation("password", err))
+	}
+	err = val.ValidateFullName(req.GetFullName())
+	if err != nil {
+		violations = append(violations, fieldViolation("full_name", err))
+	}
+	err = val.ValidateEmail(req.GetEmail())
+	if err != nil {
+		violations = append(violations, fieldViolation("email", err))
+	}
+
+	return violations
 }
