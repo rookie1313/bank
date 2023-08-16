@@ -84,8 +84,8 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/test-results
           mv test-results.json $GITHUB_WORKSPACE/test-results/
           
-          - name: Upload test results as artifact
-            uses: actions/upload-artifact@v3
-            with:
-              name: test-results
-              path: $GITHUB_WORKSPACE/test-results
+      - name: Upload test results as artifact
+        uses: actions/upload-artifact@v3
+        with:
+            name: test-results
+            path: $GITHUB_WORKSPACE/test-results/
