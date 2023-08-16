@@ -83,7 +83,8 @@ jobs:
           go test -v -cover -json ./... > test-results.json
           mkdir -p $GITHUB_WORKSPACE/test-results
           mv test-results.json $GITHUB_WORKSPACE/test-results/
-          
+          ls $GITHUB_WORKSPACE/test-results/
+
       - name: Upload test results as artifact
         uses: actions/upload-artifact@v3
         with:
