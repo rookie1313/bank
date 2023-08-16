@@ -42,9 +42,12 @@ proto:
         --grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
         --openapiv2_out=doc/swagger --openapiv2_opt=allow_merge=true \
         proto/*.proto
-#    statik -src=./doc/swagger -dest=./doc
+
+statik:
+	rm -f doc/statik/*.go
+	statik -src=./doc/swagger -dest=./doc
 
 evans:
 	evans --host localhost --port 8888 -r repl
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mock proto
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mock proto statik evans

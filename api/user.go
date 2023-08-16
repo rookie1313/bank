@@ -4,6 +4,7 @@ import (
 	db "bank/db/sqlc"
 	"bank/util"
 	"database/sql"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -54,7 +55,8 @@ func (server *Server) createUser(ctx *gin.Context) {
 	}
 	user, err := server.store.CreateUser(ctx, args)
 	if err != nil {
-		if pgErr, ok := err.(*pq.Error); ok {
+		var pgErr *pq.Error
+		if errors.As(err, &pgErr) {
 			switch pgErr.Code.Name() {
 			case "unique_violation":
 				ctx.JSON(http.StatusForbidden, errResponse(err))
@@ -91,7 +93,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 
 	user, err := server.store.GetUser(ctx, req.UserName)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, errResponse(err))
 			return
 		}
