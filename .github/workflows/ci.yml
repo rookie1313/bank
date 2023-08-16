@@ -79,14 +79,10 @@ jobs:
         run: make migrateup
 
       - name: Run tests and save results
-        run: |
-          go test -v -cover -json ./... > test-results.json
-          mkdir -p $GITHUB_WORKSPACE/test-results
-          mv test-results.json $GITHUB_WORKSPACE/test-results/
-          ls $GITHUB_WORKSPACE/test-results/
+        run: go test -v -cover -json ./... > test-results.json
 
       - name: Upload test results as artifact
         uses: actions/upload-artifact@v3
         with:
             name: test-results
-            path: $GITHUB_WORKSPACE/test-results/
+            path: test-results.json
