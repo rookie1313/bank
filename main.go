@@ -34,7 +34,6 @@ func main() {
 	store := db.NewStore(conn)
 
 	go runGatewayServer(config, store)
-	// runGRPCServer
 	runGRPCServer(config, store)
 }
 
@@ -108,7 +107,7 @@ func runGatewayServer(config util.Config, store db.Store) {
 	//open swagger when start
 	go func() {
 		addr := "http://localhost:8080/swagger"
-		err := open.Run(addr)
+		err = open.Run(addr)
 		if err != nil {
 			log.Fatal("can not open swagger api page ", err)
 		}
