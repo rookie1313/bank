@@ -12,7 +12,7 @@ option go_package = "bank/pb";
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
     title: "Bank API";
-    version: "2.0";
+    version: "1.1";
     contact: {
       name: "yizhe liu";
       url: "https://github.com/rookie1313/bank";
@@ -23,7 +23,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 service Bank {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
     option (google.api.http) = {
-      post: "/v2/create_user"
+      post: "/v1/create_user"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -32,7 +32,7 @@ service Bank {
   }
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
     option (google.api.http) = {
-      post: "/v2/login_user"
+      post: "/v1/login_user"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -41,7 +41,7 @@ service Bank {
   }
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
     option (google.api.http) = {
-      patch: "/v2/update_user"
+      patch: "/v1/update_user"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
