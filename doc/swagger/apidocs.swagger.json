@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Bank API",
-    "version": "2.0",
+    "version": "1.1",
     "contact": {
       "name": "yizhe liu",
       "url": "https://github.com/rookie1313/bank",
@@ -21,7 +21,7 @@
     "application/json"
   ],
   "paths": {
-    "/v2/create_user": {
+    "/v1/create_user": {
       "post": {
         "description": "create a new user",
         "operationId": "Bank_CreateUser",
@@ -54,7 +54,7 @@
         ]
       }
     },
-    "/v2/login_user": {
+    "/v1/login_user": {
       "post": {
         "description": "login user",
         "operationId": "Bank_LoginUser",
@@ -87,7 +87,7 @@
         ]
       }
     },
-    "/v2/update_user": {
+    "/v1/update_user": {
       "patch": {
         "description": "partial update user",
         "operationId": "Bank_UpdateUser",
