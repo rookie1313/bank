@@ -1,13 +1,13 @@
 # Simple bank api demonstration
 
-tech stacks are listed:<br>
-Golang@1.18<br>
-Postgresql alpine 15<br>
-Docker
+tech stacks are listed:
+* Golang@1.18
+* Postgresql alpine 15
+* Docker
 
-packages:<br>
-gin<br>
-sqlc<br>
-testify<br>
-viper<br>
-gRPC(client:evans gateway:grpc-gateway)
+main packages:
+* gin
+* sqlc
+* testify
+* viper
+* gRPC(gateway:grpc-gateway)
