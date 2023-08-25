@@ -9,18 +9,19 @@ import (
 	"bank/util"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/skratchdot/open-golang/open"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
@@ -29,7 +30,15 @@ func main() {
 		log.Fatal().Err(err).Msg("can not load config")
 	}
 	if config.Environment == "development" {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		output := zerolog.ConsoleWriter{
+			Out:        os.Stderr,
+			TimeFormat: time.RFC3339,
+			FormatMessage: func(i interface{}) string {
+				return fmt.Sprintf("*** %s ***", i)
+			},
+		}
+
+		log.Logger = log.Output(output).With().Caller().Logger()
 	}
 
 	conn, err := sql.Open(config.DBDriver, config.DBSource)
@@ -111,20 +120,22 @@ func runGatewayServer(config util.Config, store db.Store) {
 	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
 	mux.Handle("/swagger/", swaggerHandler)
 	//open swagger when start
-	go func() {
-		addr := "http://localhost:8080/swagger"
-		err = open.Run(addr)
-		if err != nil {
-			log.Fatal().Err(err).Msg("can not open swagger api page")
-		}
-	}()
+	//go func() {
+	//	addr := "http://localhost:8080/swagger"
+	//	err = open.Run(addr)
+	//	if err != nil {
+	//		log.Fatal().Err(err).Msg("can not open swagger api page")
+	//	}
+	//}()
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not create listener")
 	}
 
-	log.Info().Msgf("starting http gateway server on %s", listener.Addr().String())
-	err = http.Serve(listener, mux)
+	log.Info().Msgf("starting http gateway server on %s", listener.Addr())
+
+	handler := gapi.HttpLogger(mux)
+	err = http.Serve(listener, handler)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not start http gateway server")
 	}
