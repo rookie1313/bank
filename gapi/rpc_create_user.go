@@ -5,12 +5,16 @@ import (
 	"bank/pb"
 	"bank/util"
 	"bank/val"
+	"bank/worker"
 	"context"
 	"errors"
+	"fmt"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
@@ -40,6 +44,20 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 			}
 		}
 		return nil, status.Errorf(codes.Internal, "failed to create user %s ", err.Error())
+	}
+
+	//TODO: use transaction
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(10 * time.Second),
+		asynq.Queue("critical"),
+	}
+	err = server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, &worker.PayloadSendVerifyEmail{
+		Username: user.Username},
+		opts...,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to distribute email verification task: %w", err)
 	}
 	res := &pb.CreateUserResponse{
 		User: ConvertUser(user),

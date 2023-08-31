@@ -7,10 +7,12 @@ import (
 	"bank/gapi"
 	"bank/pb"
 	"bank/util"
+	"bank/worker"
 	"context"
 	"database/sql"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/hibiken/asynq"
 	_ "github.com/lib/pq"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/zerolog"
@@ -47,8 +49,14 @@ func main() {
 	}
 	store := db.NewStore(conn)
 
-	go runGatewayServer(config, store)
-	runGRPCServer(config, store)
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+	go runTaskProcessor(redisOpt, store)
+
+	go runGatewayServer(config, store, taskDistributor)
+	runGRPCServer(config, store, taskDistributor)
 }
 
 func runGinServer(config util.Config, store db.Store) {
@@ -62,8 +70,17 @@ func runGinServer(config util.Config, store db.Store) {
 	}
 }
 
-func runGRPCServer(config util.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runTaskProcessor(opt asynq.RedisClientOpt, store db.Store) {
+	task := worker.NewRedisTaskProcessor(opt, store)
+	log.Info().Msg("start task processor")
+	err := task.Start()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to start task processor")
+	}
+}
+
+func runGRPCServer(config util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, taskDistributor)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not create server")
 	}
@@ -85,8 +102,8 @@ func runGRPCServer(config util.Config, store db.Store) {
 	}
 }
 
-func runGatewayServer(config util.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runGatewayServer(config util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, taskDistributor)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not create server")
 	}

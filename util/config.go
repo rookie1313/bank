@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//Config stores all configurations in this application
+// Config stores all configurations in this application
 type Config struct {
 	DBDriver             string        `mapstructure:"DB_DRIVER"`
 	DBSource             string        `mapstructure:"DB_SOURCE"`
@@ -15,6 +15,7 @@ type Config struct {
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 	Environment          string        `mapstructure:"ENVIRONMENT"`
+	RedisAddress         string        `mapstructure:"REDIS_ADDRESS"`
 }
 
 // LoadConfig reads configuration from file or environment variables.

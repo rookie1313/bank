@@ -30,7 +30,8 @@ func (server *Server) createAccount(ctx *gin.Context) {
 	}
 	account, err := server.store.CreateAccount(ctx, args)
 	if err != nil {
-		if pgErr, ok := err.(*pq.Error); ok {
+		var pgErr *pq.Error
+		if errors.As(err, &pgErr) {
 			switch pgErr.Code.Name() {
 			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errResponse(err))
@@ -56,7 +57,7 @@ func (server *Server) getAccount(ctx *gin.Context) {
 
 	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, errResponse(err))
 			return
 		}

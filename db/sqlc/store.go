@@ -19,7 +19,7 @@ type SQLStore struct {
 	db *sql.DB
 }
 
-//NewStore returns a new store
+// NewStore returns a new store
 func NewStore(db *sql.DB) Store {
 	return &SQLStore{
 		Queries: New(db),
