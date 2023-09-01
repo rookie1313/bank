@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/require"
+	"math/rand"
 	"testing"
 )
 
@@ -14,8 +15,8 @@ func TestTransferTx(t *testing.T) {
 	account2 := createRandomAccount(t)
 	fmt.Println(">> before:", account1.Balance, account2.Balance)
 
-	n := 10
-	amount := int64(10)
+	n := 100
+	amount := rand.Int63n(100) + 1
 
 	errs := make(chan error)
 	results := make(chan TransferTxResult)
