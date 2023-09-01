@@ -8,7 +8,6 @@ import (
 	"bank/worker"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -28,13 +27,28 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		return nil, status.Errorf(codes.Internal, "failed to hash password %s ", err.Error())
 	}
 
-	args := db.CreateUserParams{
-		Username:       req.GetUsername(),
-		HashedPassword: hashedPassword,
-		FullName:       req.GetFullName(),
-		Email:          req.GetEmail(),
+	args := db.CreateUserTxParams{
+		CreateUserParams: db.CreateUserParams{
+			Username:       req.GetUsername(),
+			HashedPassword: hashedPassword,
+			FullName:       req.GetFullName(),
+			Email:          req.GetEmail(),
+		},
+		AfterCreate: func(user db.User) error {
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue("critical"),
+			}
+
+			return server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, &worker.PayloadSendVerifyEmail{
+				Username: user.Username},
+				opts...,
+			)
+		},
 	}
-	user, err := server.store.CreateUser(ctx, args)
+
+	userTransactionResult, err := server.store.CreateUserTx(ctx, args)
 	if err != nil {
 		var pgErr *pq.Error
 		if errors.As(err, &pgErr) {
@@ -46,21 +60,8 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		return nil, status.Errorf(codes.Internal, "failed to create user %s ", err.Error())
 	}
 
-	//TODO: use transaction
-	opts := []asynq.Option{
-		asynq.MaxRetry(10),
-		asynq.ProcessIn(10 * time.Second),
-		asynq.Queue("critical"),
-	}
-	err = server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, &worker.PayloadSendVerifyEmail{
-		Username: user.Username},
-		opts...,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to distribute email verification task: %w", err)
-	}
 	res := &pb.CreateUserResponse{
-		User: ConvertUser(user),
+		User: ConvertUser(userTransactionResult.User),
 	}
 
 	return res, nil
