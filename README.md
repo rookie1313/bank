@@ -1,7 +1,7 @@
 # Simple bank api demonstration
 
 tech stacks are listed:
-* Golang@1.18
+* Golang@1.21
 * Postgresql alpine 15
 * Docker
 

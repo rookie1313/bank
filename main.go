@@ -49,26 +49,14 @@ func main() {
 	}
 	store := db.NewStore(conn)
 
-	//redisOpt := asynq.RedisClientOpt{
-	//	Addr: config.RedisAddress,
-	//}
-	//taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
-	//go runTaskProcessor(redisOpt, store)
-	//
-	//go runGatewayServer(config, store, taskDistributor)
-	//runGRPCServer(config, store, taskDistributor)
-	runGinServer(config, store)
-}
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+	go runTaskProcessor(redisOpt, store)
 
-func runGinServer(config util.Config, store db.Store) {
-	server, err := api.NewServer(config, store)
-	if err != nil {
-		log.Fatal().Err(err).Msg("can not create server")
-	}
-	err = server.Start(config.HTTPServerAddress)
-	if err != nil {
-		log.Fatal().Err(err).Msg("cannot start server")
-	}
+	go runGatewayServer(config, store, taskDistributor)
+	runGRPCServer(config, store, taskDistributor)
 }
 
 func runTaskProcessor(opt asynq.RedisClientOpt, store db.Store) {
@@ -158,4 +146,15 @@ func runGatewayServer(config util.Config, store db.Store, taskDistributor worker
 		log.Fatal().Err(err).Msg("can not start http gateway server")
 	}
 
+}
+
+func runGinServer(config util.Config, store db.Store) {
+	server, err := api.NewServer(config, store)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can not create server")
+	}
+	err = server.Start(config.HTTPServerAddress)
+	if err != nil {
+		log.Fatal().Err(err).Msg("cannot start server")
+	}
 }
