@@ -10,6 +10,7 @@ import (
 	"errors"
 	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -47,6 +48,8 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 			)
 		},
 	}
+	log.Info().Msg("creating user")
+	time.Sleep(10 * time.Second)
 
 	userTransactionResult, err := server.store.CreateUserTx(ctx, args)
 	if err != nil {
