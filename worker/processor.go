@@ -10,6 +10,7 @@ import (
 type TaskProcessor interface {
 	Start() error
 	ProcessTaskSendVerifyEmail(ctx context.Context, task *asynq.Task) error
+	ShutDown()
 }
 
 type RedisTaskProcessor struct {
@@ -31,7 +32,7 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) TaskPr
 					Bytes("payload", task.Payload()).
 					Msg("process task failed")
 			}),
-			Logger: WorkLogger{},
+			Logger: NewLogger(),
 		},
 	)
 
@@ -46,4 +47,8 @@ func (processor *RedisTaskProcessor) Start() error {
 	mux.HandleFunc(TaskSendVerifyEmail, processor.ProcessTaskSendVerifyEmail)
 
 	return processor.server.Start(mux)
+}
+
+func (processor *RedisTaskProcessor) ShutDown() {
+	processor.server.Shutdown()
 }

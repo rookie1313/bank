@@ -19,6 +19,10 @@ type Logger interface {
 type WorkLogger struct {
 }
 
+func NewLogger() *WorkLogger {
+	return &WorkLogger{}
+}
+
 func (logger WorkLogger) Debug(args ...interface{}) {
 	log.Debug().Msgf("%v", args)
 }

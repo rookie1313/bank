@@ -6,6 +6,8 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=simple_bank
+  redis:
+    image: redis:7-alpine
   api:
     build:
       context: .
